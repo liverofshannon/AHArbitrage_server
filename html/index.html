@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AH Stock Map</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- 登录页面 -->
+  <div id="loginPage" class="login-container">
+    <h1>AH Stock Map</h1>
+    <p class="login-subtitle">请登录以继续</p>
+    <div class="login-form">
+      <div class="form-group">
+        <label for="username">用户名</label>
+        <input id="username" type="text" placeholder="请输入用户名" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="password">密码</label>
+        <input id="password" type="password" placeholder="请输入密码" autocomplete="current-password" />
+      </div>
+      <p id="loginError" class="login-error"></p>
+      <button id="btnLogin" class="btn btn-login">登 录</button>
+    </div>
+  </div>
+
+  <!-- 主页面 -->
+  <div id="uploadPage" class="container" style="display:none">
+    <div class="header">
+      <h1>AH Stock Map</h1>
+      <button id="btnLogout" class="btn-logout">退出登录</button>
+    </div>
+
+    <div class="mode-tabs">
+      <button id="btnModeStock" class="mode-tab active">更新股票监控表</button>
+      <button id="btnModePremium" class="mode-tab">更新溢价监控表</button>
+      <button id="btnModeDownload" class="mode-tab">下载比价文件</button>
+    </div>
+
+    <p class="subtitle" id="subtitle">目标文件: <code>/home/harry/data/config/ah_stock_map.csv</code></p>
+
+    <!-- 上传区域 -->
+    <div id="uploadSection">
+      <div id="dropZone" class="drop-zone">
+        <div id="dropHint" class="drop-hint">
+          <span class="upload-icon">⬆</span>
+          <p>拖拽 CSV 文件到此处，或点击选择文件</p>
+        </div>
+        <div id="fileInfo" class="file-info" style="display:none">
+          <span class="file-icon">📄</span>
+          <span id="fileName" class="file-name"></span>
+          <span id="fileSize" class="file-size"></span>
+        </div>
+        <input id="fileInput" type="file" accept=".csv" style="display:none" />
+      </div>
+
+      <div class="actions">
+        <button id="btnUpload" class="btn btn-upload" disabled>更新股票监控表</button>
+        <button id="btnClear" class="btn-clear" style="display:none">清除</button>
+      </div>
+    </div>
+
+    <!-- 下载区域 -->
+    <div id="downloadSection" style="display:none">
+      <div class="download-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dlDate">日期</label>
+            <input id="dlDate" type="text" placeholder="yyyyMMdd" maxlength="8" />
+          </div>
+          <div class="form-group">
+            <label for="dlCode">A股代码</label>
+            <input id="dlCode" type="text" placeholder="XXXXXX" maxlength="6" />
+          </div>
+          <button id="btnSearch" class="btn btn-search">搜索</button>
+        </div>
+      </div>
+      <div id="downloadResults" class="download-results"></div>
+    </div>
+
+    <!-- 结果提示 -->
+    <div id="resultSuccess" class="result success">
+      <h3>上传成功</h3>
+      <table>
+        <tr><td>文件路径</td><td id="resultPath">/home/harry/data/config/ah_stock_map.csv</td></tr>
+        <tr><td>文件大小</td><td id="resultSize"></td></tr>
+        <tr><td>修改时间</td><td id="resultTime"></td></tr>
+      </table>
+    </div>
+
+    <div id="resultError" class="result error">
+      <h3>提示</h3>
+      <p id="errorMsg"></p>
+    </div>
+  </div>
+
+  <!-- 被踢出遮罩 -->
+  <div id="kickedOverlay" class="kicked-overlay" style="display:none">
+    <div class="kicked-dialog">
+      <h2>会话已失效</h2>
+      <p>该账号已在其他设备或浏览器登录，当前会话已被踢出。</p>
+      <p id="kickedCountdown" class="kicked-countdown">60 秒后自动返回登录页</p>
+      <button id="btnKickedOk" class="btn btn-login">重新登录</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

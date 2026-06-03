@@ -1,0 +1,17 @@
+services:
+  nginx:
+    build: .
+    ports:
+      - "8080:80"
+    depends_on:
+      - flask-backend
+
+  flask-backend:
+    build: ./backend
+    volumes:
+      - /home/harry/data/config:/home/harry/data/config
+    environment:
+      - ROOT_DIR=/home/harry/
+      - SECRET_KEY=change-me-to-a-random-string
+    expose:
+      - "8000"
