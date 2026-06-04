@@ -1,6 +1,10 @@
 # 格式: 用户名:盐值:SHA256哈希
 # 生成方法: SHA256(用户名:密码:盐值)
+#admmin:admin123
 admin:aa8832170c10bca8dc8a07c7c6f33982:7cf3170d16ab8b614e37118437e7cb3cbac3223194bb9aa7fca44d8b5fbe688e
-zhangwei:823f8c1b953aececd92ab5fb40c450ac:8852a5ce76e92f89f4c720eec47c9c475679c14db4cee113123f68b66cdbbcf4
-# 紧急解锁密钥（用户名 _unlock）
+#zhangwei: zhangwei0101
+zhangwei:5b01f7c54a750b32daa7ac681f00a17d:73a653497c69b527578e19df3fec6db685563a3d703dbccc2291f4011395df09
+#zhenghaoyang: HarryZ0319
+zhenghaoyang:9c415c8e204d80615c7c40be74f5830f:19ddaeab4b7bf4d511f17097359246d9e0bb54ae1364f63fb4320ed2a1850061
+# 紧急解锁密钥（用户名 _unlock unlock2026）
 !unlock:c8b691c33707e1d41f2267c0d1550873:6e6be2e51905639cca90c2137de2db3337660d21290af2bb37e661b767ff3a59
