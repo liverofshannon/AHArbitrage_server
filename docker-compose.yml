@@ -11,7 +11,7 @@ services:
     # volumes:
       # - /home/harry/data/config:/home/harry/data/config
     environment:
-      - ROOT_DIR=/home/harry/
+      - ROOT_DIR=/home/harry/data/config
       - SECRET_KEY=secretkey2026
     expose:
       - "8000"

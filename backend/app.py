@@ -12,8 +12,8 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 
 # ====== 配置 ======
-ROOT_DIR = os.environ.get("ROOT_DIR", "/home/harry/git/AHArbitrage_server/backend")
-USERS_FILE = os.path.join(ROOT_DIR + "git/AHArbitrage_server/backend", "users.txt")
+ROOT_DIR = os.environ.get("ROOT_DIR", "/home/harry/data/config")
+USERS_FILE = os.path.join(ROOT_DIR, "users.txt")
 STOCK_FILE = os.path.join(ROOT_DIR, "ah_stock_map.csv")
 PREMIUM_FILE = os.path.join(ROOT_DIR, "premium_monitor.csv")
 MAX_ATTEMPTS = 5
