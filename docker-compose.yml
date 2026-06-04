@@ -8,8 +8,8 @@ services:
 
   flask-backend:
     build: ./backend
-    # volumes:
-      # - /home/harry/data/config:/home/harry/data/config
+     volumes:
+       - /home/harry/data/git/AHArbitrage_server/backend:/home/harry/data/config
     environment:
       - ROOT_DIR=/home/harry/data/config
       - SECRET_KEY=secretkey2026
