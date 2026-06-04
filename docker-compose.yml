@@ -10,8 +10,10 @@ services:
     build: ./backend
     volumes:
        - /home/harry/git/AHArbitrage_server/backend:/home/harry/data/config
+       - /home/harry/data:/home/harry/data
     environment:
       - ROOT_DIR=/home/harry/data/config
+      - DATA_DIR=/home/harry/data
       - SECRET_KEY=secretkey2026
     expose:
       - "8000"
