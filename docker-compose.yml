@@ -8,10 +8,10 @@ services:
 
   flask-backend:
     build: ./backend
-    volumes:
-      - /home/harry/data/config:/home/harry/data/config
+    # volumes:
+      # - /home/harry/data/config:/home/harry/data/config
     environment:
       - ROOT_DIR=/home/harry/
-      - SECRET_KEY=change-me-to-a-random-string
+      - SECRET_KEY=secretkey2026
     expose:
       - "8000"
