@@ -7,7 +7,7 @@ from datetime import datetime
 
 LEVELS = {"DEBUG": logging.DEBUG, "INFO": logging.INFO, "WARNING": logging.WARNING, "ERROR": logging.ERROR, "CRITICAL": logging.CRITICAL}
 
-ROOT_DIR = os.environ.get("ROOT_DIR", "/home/harry/data/config")
+ROOT_DIR = os.environ.get("ROOT_DIR", "/home/harry")
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 LOG_MAX_BYTES = 10 * 1024 * 1024  # 10MB
 

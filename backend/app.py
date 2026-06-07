@@ -12,11 +12,11 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 
 # ====== 配置 ======
-ROOT_DIR = os.environ.get("ROOT_DIR", "/home/harry/data/config")
-DATA_DIR = os.environ.get("DATA_DIR", "/home/harry/data")
-USERS_FILE = os.path.join(ROOT_DIR, "users.txt")
-STOCK_FILE = os.path.join(ROOT_DIR, "ah_stock_map.csv")
-PREMIUM_FILE = os.path.join(ROOT_DIR, "premium_monitor.csv")
+ROOT_DIR = os.environ.get("ROOT_DIR", "/home/harry")
+CONFIG_DIR = os.path.join(ROOT_DIR, "config")
+USERS_FILE = os.path.join(CONFIG_DIR, "users.txt")
+STOCK_FILE = os.path.join(CONFIG_DIR, "ah_stock_map.csv")
+PREMIUM_FILE = os.path.join(CONFIG_DIR, "premium_monitor.csv")
 MAX_ATTEMPTS = 5
 LOCKOUT_MINUTES = 30
 BASE_DELAY_SECONDS = 1
@@ -216,7 +216,7 @@ def search_csv():
         return jsonify({"code": 400, "msg": "日期格式yyyyMMdd，代码格式XXXXXX"}), 400
 
     yyyy = date_str[:4]
-    search_dir = os.path.join(DATA_DIR, f"{yyyy}_ah比价", f"{date_str}_ah比价")
+    search_dir = os.path.join(ROOT_DIR, "data", f"{yyyy}_ah比价", f"{date_str}_ah比价")
     if not os.path.isdir(search_dir):
         return jsonify({"code": 0, "data": {"dir": search_dir, "files": []}})
 

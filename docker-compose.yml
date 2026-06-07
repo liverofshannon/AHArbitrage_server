@@ -1,6 +1,8 @@
 services:
   nginx:
     build: .
+    volumes:
+      - /home/harry/data:/app/data
     ports:
       - "8080:80"
     depends_on:
@@ -9,11 +11,9 @@ services:
   flask-backend:
     build: ./backend
     volumes:
-       - /home/harry/git/AHArbitrage_server/backend:/home/harry/data/config
-       - /home/harry/data:/home/harry/data
+      - /home/harry:/home/harry
     environment:
-      - ROOT_DIR=/home/harry/data/config
-      - DATA_DIR=/home/harry/data
+      - ROOT_DIR=/home/harry
       - SECRET_KEY=secretkey2026
     expose:
       - "8000"
