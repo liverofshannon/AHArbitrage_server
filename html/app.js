@@ -329,18 +329,44 @@ btnSearch.addEventListener("click", function () {
         return;
       }
 
-      var html = '<p class="download-dir">目录: <code>' + data.data.dir + '</code></p>';
+      var dir = data.data.dir;
+      var html = '<p class="download-dir">目录: <code>' + dir + '</code></p>';
       html += '<ul class="file-list">';
       for (var i = 0; i < files.length; i++) {
         html += '<li class="file-item">';
         html += '<span class="file-item-name">' + files[i] + '</span>';
-        html += '<a class="btn btn-download" href="/download_file?dir=' +
-          encodeURIComponent(data.data.dir) + '&file=' + encodeURIComponent(files[i]) +
-          '" download>' + '下载</a>';
+        html += '<button class="btn btn-download" data-dir="' + encodeURIComponent(dir) +
+          '" data-file="' + encodeURIComponent(files[i]) + '">下载</button>';
         html += '</li>';
       }
       html += '</ul>';
       downloadResults.innerHTML = html;
+
+      var btns = downloadResults.querySelectorAll(".btn-download");
+      for (var j = 0; j < btns.length; j++) {
+        btns[j].addEventListener("click", function () {
+          var d = this.getAttribute("data-dir");
+          var f = this.getAttribute("data-file");
+          fetch("/download_file?dir=" + d + "&file=" + f, {
+            method: "GET", credentials: "same-origin"
+          })
+            .then(function (res) {
+              if (res.status === 401) { kickOut(); return; }
+              if (!res.ok) throw new Error("下载失败");
+              return res.blob();
+            })
+            .then(function (blob) {
+              if (!blob) return;
+              var url = URL.createObjectURL(blob);
+              var a = document.createElement("a");
+              a.href = url;
+              a.download = f;
+              a.click();
+              URL.revokeObjectURL(url);
+            })
+            .catch(function () {});
+        });
+      }
     })
     .catch(function (err) {
       downloadResults.innerHTML = '<p class="download-empty">网络错误: ' + err.message + '</p>';

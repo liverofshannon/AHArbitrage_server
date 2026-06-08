@@ -216,7 +216,7 @@ def search_csv():
         return jsonify({"code": 400, "msg": "日期格式yyyyMMdd，代码格式XXXXXX"}), 400
 
     yyyy = date_str[:4]
-    search_dir = os.path.join(ROOT_DIR, "data", f"{yyyy}_ah比价", f"{date_str}_ah比价")
+    search_dir = os.path.join(ROOT_DIR, f"{yyyy}_ah比价", f"{date_str}_ah比价")
     if not os.path.isdir(search_dir):
         return jsonify({"code": 0, "data": {"dir": search_dir, "files": []}})
 
