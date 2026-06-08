@@ -5,7 +5,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
-RUN mkdir -p /home/harry/data/config
+VOLUME /app/data
+
+ENV ROOT_DIR=/app/data/
 
 EXPOSE 8000
 

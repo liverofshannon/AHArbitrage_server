@@ -129,8 +129,8 @@ var MODE_PREMIUM = "premium";
 var MODE_DOWNLOAD = "download";
 
 var UPLOAD_MODES = {
-  stock: { label: "更新股票监控表", endpoint: "/update_ah_rate", targetPath: "/home/harry/data/config/ah_stock_map.csv" },
-  premium: { label: "更新溢价监控表", endpoint: "/premium_update", targetPath: "/home/harry/data/config/premium_monitor.csv" }
+  stock: { label: "更新股票监控表", endpoint: "/update_ah_rate" },
+  premium: { label: "更新溢价监控表", endpoint: "/premium_update" }
 };
 
 var uploadMode = MODE_STOCK;
@@ -177,7 +177,7 @@ function switchMode(mode) {
     downloadSection.style.display = "none";
     subtitle.style.display = "";
     var cfg = UPLOAD_MODES[mode];
-    subtitle.innerHTML = "目标文件: <code>" + cfg.targetPath + "</code>";
+    subtitle.textContent = "";
     btnUpload.textContent = cfg.label;
   }
 }
@@ -251,7 +251,7 @@ btnUpload.addEventListener("click", function () {
     .then(function (res) { return res.json(); })
     .then(function (data) {
       if (data.code === 0) {
-        resultPath.textContent = UPLOAD_MODES[uploadMode].targetPath;
+        resultPath.textContent = data.data.file;
         resultSize.textContent = fmtSize(data.data.size);
         resultTime.textContent = data.data.modified;
         resultSuccess.classList.add("show");

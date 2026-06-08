@@ -11,9 +11,9 @@ services:
   flask-backend:
     build: ./backend
     volumes:
-      - /home/harry:/home/harry
+      - /home/harry/data:/app/data
     environment:
-      - ROOT_DIR=/home/harry
+      - ROOT_DIR=/app/data
       - SECRET_KEY=secretkey2026
     expose:
       - "8000"
