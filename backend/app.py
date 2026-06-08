@@ -20,12 +20,12 @@ PREMIUM_FILE = os.path.join(CONFIG_DIR, "ah_alarmRate.csv")
 MAX_ATTEMPTS = 5
 LOCKOUT_MINUTES = 30
 BASE_DELAY_SECONDS = 1
+SESSION_DIR = os.path.join(ROOT_DIR, "sessions")
 SESSION_GC_INTERVAL = 300  # 5 分钟清理一次过期 session
 
 # ====== 内存状态 ======
 users = {}           # username -> {salt, hash}
 unlock_code = None   # {salt, hash}
-active_sessions = {}  # username -> {session_id, login_time}
 failed_attempts = {}  # username -> {count, first_time, lockout_until}
 ip_attempts = {}      # ip -> {count, first_time}
 last_gc = time.time()
@@ -63,15 +63,53 @@ def get_client_ip():
         return xff.split(",")[0].strip()
     return request.remote_addr or "127.0.0.1"
 
+def _session_path(username):
+    return os.path.join(SESSION_DIR, f"{username}.session")
+
+
+def _get_session(username):
+    p = _session_path(username)
+    if not os.path.exists(p):
+        return None
+    try:
+        mtime = os.path.getmtime(p)
+        if time.time() - mtime > 86400:
+            os.remove(p)
+            return None
+        with open(p, "r") as f:
+            return f.read().strip()
+    except Exception:
+        return None
+
+
+def _set_session(username, sid):
+    os.makedirs(SESSION_DIR, exist_ok=True)
+    with open(_session_path(username), "w") as f:
+        f.write(sid)
+
+
+def _del_session(username):
+    p = _session_path(username)
+    if os.path.exists(p):
+        os.remove(p)
+
+
 def gc_sessions():
     global last_gc
     now = time.time()
     if now - last_gc < SESSION_GC_INTERVAL:
         return
     last_gc = now
-    expired = [u for u, s in active_sessions.items() if now - s["login_time"] > 86400]
-    for u in expired:
-        del active_sessions[u]
+    if not os.path.isdir(SESSION_DIR):
+        return
+    for fn in os.listdir(SESSION_DIR):
+        if fn.endswith(".session"):
+            p = os.path.join(SESSION_DIR, fn)
+            if now - os.path.getmtime(p) > 86400:
+                try:
+                    os.remove(p)
+                except Exception:
+                    pass
 
 # ====== 认证装饰器 ======
 def require_auth(f):
@@ -82,8 +120,8 @@ def require_auth(f):
         sid = session.get("session_id")
         if not username or not sid:
             return jsonify({"code": 401, "msg": "请先登录"}), 401
-        current = active_sessions.get(username)
-        if not current or current["session_id"] != sid:
+        current_sid = _get_session(username)
+        if not current_sid or current_sid != sid:
             session.clear()
             return jsonify({"code": 401, "msg": "该账号已在其他设备登录，当前会话已被踢出"}), 401
         return f(*args, **kwargs)
@@ -165,7 +203,7 @@ def _do_login(username):
     session["session_id"] = sid
     session.permanent = True
     # 覆盖旧 session（实现单 session 互踢）
-    active_sessions[username] = {"session_id": sid, "login_time": time.time()}
+    _set_session(username, sid)
     return jsonify({"code": 0, "msg": "ok", "data": {"username": username}})
 
 
@@ -173,8 +211,7 @@ def _do_login(username):
 def logout():
     username = session.get("username")
     if username:
-        if username in active_sessions and active_sessions[username]["session_id"] == session.get("session_id"):
-            del active_sessions[username]
+        _del_session(username)
         log.info(f"用户 {username} 已登出")
     session.clear()
     return jsonify({"code": 0, "msg": "ok"})
@@ -187,8 +224,8 @@ def check_session():
     sid = session.get("session_id")
     if not username or not sid:
         return jsonify({"code": 401, "msg": "未登录"}), 401
-    current = active_sessions.get(username)
-    if not current or current["session_id"] != sid:
+    current_sid = _get_session(username)
+    if not current_sid or current_sid != sid:
         session.clear()
         log.info(f"用户 {username} 会话被踢出（新设备登录覆盖）")
         return jsonify({"code": 401, "msg": "该账号已在其他设备登录，当前会话已被踢出"}), 401
