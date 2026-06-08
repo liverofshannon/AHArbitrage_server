@@ -278,6 +278,18 @@ def download_file():
     return send_file(filepath, as_attachment=True, download_name=filename)
 
 
+def _detect_and_convert_to_utf8(raw_bytes):
+    """探测编码并转为 UTF-8"""
+    if raw_bytes[:3] == b"\xef\xbb\xbf":  # UTF-8 BOM
+        return raw_bytes.decode("utf-8-sig").encode("utf-8")
+    for enc in ["utf-8", "gbk", "gb2312", "gb18030", "latin-1"]:
+        try:
+            return raw_bytes.decode(enc).encode("utf-8")
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+    return raw_bytes  # 全失败则原样返回
+
+
 def _save_file(target_path):
     username = session.get("username", "unknown")
     body = request.get_data()
@@ -285,6 +297,7 @@ def _save_file(target_path):
         log.warning(f"用户 {username} 上传文件到 {target_path} 失败：请求体为空")
         return jsonify({"code": 400, "msg": "请求体为空"}), 400
     try:
+        body = _detect_and_convert_to_utf8(body)
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
         with open(target_path, "wb") as f:
             f.write(body)
