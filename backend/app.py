@@ -242,16 +242,20 @@ def download_file():
 
 
 def _save_file(target_path):
-    body = request.get_data()
     username = session.get("username", "unknown")
+    body = request.get_data()
     if not body:
         log.warning(f"用户 {username} 上传文件到 {target_path} 失败：请求体为空")
         return jsonify({"code": 400, "msg": "请求体为空"}), 400
-    os.makedirs(os.path.dirname(target_path), exist_ok=True)
-    with open(target_path, "wb") as f:
-        f.write(body)
-    stat = os.stat(target_path)
-    log.info(f"用户 {username} 上传文件到 {target_path}，大小 {stat.st_size} 字节")
+    try:
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        with open(target_path, "wb") as f:
+            f.write(body)
+        stat = os.stat(target_path)
+        log.info(f"用户 {username} 上传文件到 {target_path}，大小 {stat.st_size} 字节")
+    except Exception as e:
+        log.error(f"用户 {username} 上传文件到 {target_path} 写入失败: {e}")
+        return jsonify({"code": 500, "msg": f"文件写入失败: {e}"}), 500
     return jsonify({
         "code": 0,
         "msg": "ok",
