@@ -291,6 +291,9 @@ dlCode.addEventListener("keydown", function (e) {
   if (e.key === "Enter") btnSearch.click();
 });
 
+function isDateRange(val) { return /^\d{8}-\d{8}$/.test(val); }
+function isSingleDate(val) { return /^\d{8}$/.test(val); }
+
 btnSearch.addEventListener("click", function () {
   var date = dlDate.value.trim();
   var code = dlCode.value.trim();
@@ -299,8 +302,8 @@ btnSearch.addEventListener("click", function () {
     downloadResults.innerHTML = '<p class="download-empty">请输入日期和股票代码</p>';
     return;
   }
-  if (!/^\d{8}$/.test(date)) {
-    downloadResults.innerHTML = '<p class="download-empty">日期格式错误，应为 yyyyMMdd</p>';
+  if (!isSingleDate(date) && !isDateRange(date)) {
+    downloadResults.innerHTML = '<p class="download-empty">日期格式错误，应为 yyyyMMdd 或 yyyyMMdd-yyyyMMdd</p>';
     return;
   }
   if (!/^\d{6}$/.test(code)) {
@@ -309,70 +312,98 @@ btnSearch.addEventListener("click", function () {
   }
 
   btnSearch.disabled = true;
-  btnSearch.textContent = "搜索中...";
+  btnSearch.textContent = "处理中...";
   downloadResults.innerHTML = "";
 
-  fetch("/search_csv?date=" + date + "&code=" + code, {
-    method: "GET", credentials: "same-origin"
-  })
-    .then(function (res) { return res.json(); })
-    .then(function (data) {
-      if (data.code === 401) { kickOut(); return; }
-      if (data.code !== 0) {
-        downloadResults.innerHTML = '<p class="download-empty">' + data.msg + '</p>';
-        return;
-      }
-
-      var files = data.data.files;
-      if (!files || files.length === 0) {
-        downloadResults.innerHTML = '<p class="download-empty">未找到以 "' + code + '" 开头的 CSV 文件</p>';
-        return;
-      }
-
-      var dir = data.data.dir;
-      var html = '<p class="download-dir">目录: <code>' + dir + '</code></p>';
-      html += '<ul class="file-list">';
-      for (var i = 0; i < files.length; i++) {
-        html += '<li class="file-item">';
-        html += '<span class="file-item-name">' + files[i] + '</span>';
-        html += '<button class="btn btn-download" data-dir="' + encodeURIComponent(dir) +
-          '" data-file="' + encodeURIComponent(files[i]) + '">下载</button>';
-        html += '</li>';
-      }
-      html += '</ul>';
-      downloadResults.innerHTML = html;
-
-      var btns = downloadResults.querySelectorAll(".btn-download");
-      for (var j = 0; j < btns.length; j++) {
-        btns[j].addEventListener("click", function () {
-          var d = this.getAttribute("data-dir");
-          var f = this.getAttribute("data-file");
-          fetch("/download_file?dir=" + d + "&file=" + f, {
-            method: "GET", credentials: "same-origin"
-          })
-            .then(function (res) {
-              if (res.status === 401) { kickOut(); return; }
-              if (!res.ok) throw new Error("下载失败");
-              return res.blob();
-            })
-            .then(function (blob) {
-              if (!blob) return;
-              var url = URL.createObjectURL(blob);
-              var a = document.createElement("a");
-              a.href = url;
-              a.download = f;
-              a.click();
-              URL.revokeObjectURL(url);
-            })
-            .catch(function () {});
-        });
-      }
+  if (isDateRange(date)) {
+    // 日期范围 → 打包下载
+    fetch("/search_csv?date=" + date + "&code=" + code, {
+      method: "GET", credentials: "same-origin"
     })
-    .catch(function (err) {
-      downloadResults.innerHTML = '<p class="download-empty">网络错误: ' + err.message + '</p>';
+      .then(function (res) {
+        if (res.status === 401) { kickOut(); return null; }
+        if (res.status === 404) {
+          res.json().then(function (d) { downloadResults.innerHTML = '<p class="download-empty">' + d.msg + '</p>'; });
+          return null;
+        }
+        if (!res.ok) throw new Error("下载失败");
+        return res.blob();
+      })
+      .then(function (blob) {
+        if (!blob) return;
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = code + "_" + date + ".zip";
+        a.click();
+        URL.revokeObjectURL(url);
+        downloadResults.innerHTML = '<p class="download-empty" style="color:#52c41a;">下载成功：' + code + '_' + date + '.zip</p>';
+      })
+      .catch(function (err) {
+        downloadResults.innerHTML = '<p class="download-empty">下载失败: ' + err.message + '</p>';
+      })
+      .finally(function () {
+        btnSearch.disabled = false;
+        btnSearch.textContent = "搜索";
+      });
+  } else {
+    // 单日期 → 搜索并列出文件
+    fetch("/search_csv?date=" + date + "&code=" + code, {
+      method: "GET", credentials: "same-origin"
     })
-    .finally(function () {
-      btnSearch.disabled = false;
-      btnSearch.textContent = "搜索";
-    });
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.code === 401) { kickOut(); return; }
+        if (data.code !== 0) {
+          downloadResults.innerHTML = '<p class="download-empty">' + data.msg + '</p>';
+          return;
+        }
+        var files = data.data.files;
+        if (!files || files.length === 0) {
+          downloadResults.innerHTML = '<p class="download-empty">未找到以 "' + code + '" 开头的 CSV 文件</p>';
+          return;
+        }
+        var dir = data.data.dir;
+        var html = '<p class="download-dir">目录: <code>' + dir + '</code></p><ul class="file-list">';
+        for (var i = 0; i < files.length; i++) {
+          html += '<li class="file-item">';
+          html += '<span class="file-item-name">' + files[i] + '</span>';
+          html += '<button class="btn btn-download" data-dir="' + encodeURIComponent(dir) +
+            '" data-file="' + encodeURIComponent(files[i]) + '">下载</button>';
+          html += '</li>';
+        }
+        html += '</ul>';
+        downloadResults.innerHTML = html;
+
+        var btns = downloadResults.querySelectorAll(".btn-download");
+        for (var j = 0; j < btns.length; j++) {
+          btns[j].addEventListener("click", function () {
+            var d = this.getAttribute("data-dir");
+            var f = this.getAttribute("data-file");
+            fetch("/download_file?dir=" + d + "&file=" + f, { method: "GET", credentials: "same-origin" })
+              .then(function (res) {
+                if (res.status === 401) { kickOut(); return; }
+                if (!res.ok) throw new Error("下载失败");
+                return res.blob();
+              })
+              .then(function (blob) {
+                if (!blob) return;
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement("a");
+                a.href = url;
+                a.download = f;
+                a.click();
+                URL.revokeObjectURL(url);
+              });
+          });
+        }
+      })
+      .catch(function (err) {
+        downloadResults.innerHTML = '<p class="download-empty">网络错误: ' + err.message + '</p>';
+      })
+      .finally(function () {
+        btnSearch.disabled = false;
+        btnSearch.textContent = "搜索";
+      });
+  }
 });

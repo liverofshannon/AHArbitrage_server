@@ -3,7 +3,9 @@ import re
 import hashlib
 import secrets
 import time
-from datetime import datetime
+import zipfile
+import tempfile
+from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, request, jsonify, session, send_file
 from logger import log
@@ -249,8 +251,53 @@ def premium_update():
 def search_csv():
     date_str = request.args.get("date", "").strip()
     code = request.args.get("code", "").strip()
+    username = session.get("username", "unknown")
+
+    # 日期范围格式：yyyyMMdd-yyyyMMdd → 打包下载
+    if re.match(r"^\d{8}-\d{8}$", date_str) and re.match(r"^\d{6}$", code):
+        start_str, end_str = date_str.split("-")
+        try:
+            start_date = datetime.strptime(start_str, "%Y%m%d")
+            end_date = datetime.strptime(end_str, "%Y%m%d")
+        except ValueError:
+            return jsonify({"code": 400, "msg": "日期格式错误"}), 400
+        if start_date > end_date:
+            return jsonify({"code": 400, "msg": "开始日期不能晚于结束日期"}), 400
+
+        found_files = {}
+        d = start_date
+        while d <= end_date:
+            ds = d.strftime("%Y%m%d")
+            yyyy = d.strftime("%Y")
+            search_dir = os.path.join(ROOT_DIR, f"{yyyy}_ah比价", f"{ds}_ah比价")
+            if os.path.isdir(search_dir):
+                files = sorted([f for f in os.listdir(search_dir) if f.startswith(code) and f.endswith(".csv")])
+                for f in files:
+                    found_files.setdefault(ds, []).append((os.path.join(search_dir, f), f))
+            d += timedelta(days=1)
+
+        if not found_files:
+            return jsonify({"code": 404, "msg": "未找到匹配的文件"}), 404
+
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".zip")
+        try:
+            with zipfile.ZipFile(tmp.name, "w", zipfile.ZIP_DEFLATED) as zf:
+                for ds, files in sorted(found_files.items()):
+                    for full_path, filename in files:
+                        zf.write(full_path, f"{ds}/{filename}")
+            tmp.close()
+            total = sum(len(v) for v in found_files.values())
+            log.info(f"用户 {username} 批量下载，日期 {start_str}-{end_str}，代码 {code}，共 {total} 个文件")
+            return send_file(tmp.name, as_attachment=True, download_name=f"{code}_{start_str}_{end_str}.zip")
+        except Exception as e:
+            log.error(f"打包下载失败: {e}")
+            if os.path.exists(tmp.name):
+                os.remove(tmp.name)
+            return jsonify({"code": 500, "msg": f"打包失败: {e}"}), 500
+
+    # 单日期格式：yyyyMMdd → 返回文件列表 JSON
     if not re.match(r"^\d{8}$", date_str) or not re.match(r"^\d{6}$", code):
-        return jsonify({"code": 400, "msg": "日期格式yyyyMMdd，代码格式XXXXXX"}), 400
+        return jsonify({"code": 400, "msg": "日期格式yyyyMMdd 或 yyyyMMdd-yyyyMMdd，代码格式XXXXXX"}), 400
 
     yyyy = date_str[:4]
     search_dir = os.path.join(ROOT_DIR, f"{yyyy}_ah比价", f"{date_str}_ah比价")
@@ -258,7 +305,6 @@ def search_csv():
         return jsonify({"code": 0, "data": {"dir": search_dir, "files": []}})
 
     files = sorted([f for f in os.listdir(search_dir) if f.startswith(code) and f.endswith(".csv")])
-    username = session.get("username", "unknown")
     log.info(f"用户 {username} 搜索文件，目录: {search_dir}，代码: {code}，结果: {len(files)} 个")
     return jsonify({"code": 0, "data": {"dir": search_dir, "files": files}})
 
