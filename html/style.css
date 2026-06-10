@@ -467,3 +467,57 @@ body {
   color: #999 !important;
   margin-bottom: 28px !important;
 }
+
+/* ====== 图表区域 ====== */
+
+.chart-form {
+  margin-bottom: 20px;
+}
+
+.chart-form .form-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.chart-form .form-group {
+  margin-bottom: 0;
+}
+
+.chart-form .form-group input,
+.chart-form .form-group select {
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+.chart-form .form-group input:focus,
+.chart-form .form-group select:focus {
+  border-color: #1677ff;
+}
+
+.checkbox-group label {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.checkbox-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.checkbox-list label {
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

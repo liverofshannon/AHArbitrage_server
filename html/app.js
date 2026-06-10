@@ -127,6 +127,8 @@ function showUploadPage() {
 var MODE_STOCK = "stock";
 var MODE_PREMIUM = "premium";
 var MODE_DOWNLOAD = "download";
+var MODE_LINES = "lines";
+var MODE_BARS = "bars";
 
 var UPLOAD_MODES = {
   stock: { label: "更新股票监控表", endpoint: "/update_ah_rate" },
@@ -140,8 +142,12 @@ var subtitle = document.getElementById("subtitle");
 var btnModeStock = document.getElementById("btnModeStock");
 var btnModePremium = document.getElementById("btnModePremium");
 var btnModeDownload = document.getElementById("btnModeDownload");
+var btnModeLines = document.getElementById("btnModeLines");
+var btnModeBars = document.getElementById("btnModeBars");
 var uploadSection = document.getElementById("uploadSection");
 var downloadSection = document.getElementById("downloadSection");
+var linesSection = document.getElementById("linesSection");
+var barsSection = document.getElementById("barsSection");
 var dropZone = document.getElementById("dropZone");
 var dropHint = document.getElementById("dropHint");
 var fileInfo = document.getElementById("fileInfo");
@@ -157,34 +163,46 @@ var resultSize = document.getElementById("resultSize");
 var resultTime = document.getElementById("resultTime");
 var errorMsg = document.getElementById("errorMsg");
 
+function hideAllSections() {
+  uploadSection.style.display = "none";
+  downloadSection.style.display = "none";
+  linesSection.style.display = "none";
+  barsSection.style.display = "none";
+  subtitle.style.display = "none";
+}
+
 function switchMode(mode) {
   uploadMode = mode;
   btnModeStock.classList.toggle("active", mode === MODE_STOCK);
   btnModePremium.classList.toggle("active", mode === MODE_PREMIUM);
   btnModeDownload.classList.toggle("active", mode === MODE_DOWNLOAD);
+  btnModeLines.classList.toggle("active", mode === MODE_LINES);
+  btnModeBars.classList.toggle("active", mode === MODE_BARS);
 
   resultSuccess.classList.remove("show");
   resultError.classList.remove("show");
   clearFile();
   clearDownloadResults();
+  hideAllSections();
 
-  if (mode === MODE_DOWNLOAD) {
-    uploadSection.style.display = "none";
-    downloadSection.style.display = "block";
-    subtitle.style.display = "none";
-  } else {
+  if (mode === MODE_STOCK || mode === MODE_PREMIUM) {
     uploadSection.style.display = "block";
-    downloadSection.style.display = "none";
     subtitle.style.display = "";
-    var cfg = UPLOAD_MODES[mode];
-    subtitle.textContent = "";
-    btnUpload.textContent = cfg.label;
+    btnUpload.textContent = UPLOAD_MODES[mode].label;
+  } else if (mode === MODE_DOWNLOAD) {
+    downloadSection.style.display = "block";
+  } else if (mode === MODE_LINES) {
+    linesSection.style.display = "block";
+  } else if (mode === MODE_BARS) {
+    barsSection.style.display = "block";
   }
 }
 
 btnModeStock.addEventListener("click", function () { switchMode(MODE_STOCK); });
 btnModePremium.addEventListener("click", function () { switchMode(MODE_PREMIUM); });
 btnModeDownload.addEventListener("click", function () { switchMode(MODE_DOWNLOAD); });
+btnModeLines.addEventListener("click", function () { switchMode(MODE_LINES); });
+btnModeBars.addEventListener("click", function () { switchMode(MODE_BARS); });
 
 // ====== 上传逻辑 ======
 function fmtSize(bytes) {
@@ -406,4 +424,97 @@ btnSearch.addEventListener("click", function () {
         btnSearch.textContent = "搜索";
       });
   }
+});
+
+// ====== 图表逻辑 ======
+
+// --- 折线图 ---
+var btnLines = document.getElementById("btnLines");
+var linesMsg = document.getElementById("linesMsg");
+btnLines.addEventListener("click", function () {
+  var date = document.getElementById("linesDate").value.trim();
+  var code = document.getElementById("linesCode").value.trim();
+  var freq = document.getElementById("linesFreq").value;
+  var cols = [];
+  document.querySelectorAll(".linesCol:checked").forEach(function (cb) { cols.push(cb.value); });
+
+  if (!date || !code || !/^\d{8}-\d{8}$/.test(date)) { linesMsg.textContent = "日期格式 yyyyMMdd-yyyyMMdd"; return; }
+  if (!/^\d{6}$/.test(code)) { linesMsg.textContent = "代码格式 XXXXXX"; return; }
+  if (cols.length === 0) { linesMsg.textContent = "至少选一列"; return; }
+
+  btnLines.disabled = true;
+  btnLines.textContent = "生成中...";
+  linesMsg.textContent = "";
+
+  fetch("/chart_lines?date=" + date + "&code=" + code + "&freq=" + freq + "&columns=" + cols.join(","), {
+    method: "GET", credentials: "same-origin"
+  })
+    .then(function (res) {
+      if (res.status === 401) { kickOut(); return null; }
+      if (!res.ok) {
+        return res.json().then(function (d) { throw new Error(d.msg || "生成失败"); });
+      }
+      return res.blob();
+    })
+    .then(function (blob) {
+      if (!blob) return;
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = code + "_" + date + "_" + freq + "_走势图.png";
+      a.click();
+      URL.revokeObjectURL(url);
+      linesMsg.textContent = "";
+    })
+    .catch(function (err) {
+      linesMsg.textContent = err.message;
+    })
+    .finally(function () {
+      btnLines.disabled = false;
+      btnLines.textContent = "生成折线图";
+    });
+});
+
+// --- 柱状图 ---
+var btnBars = document.getElementById("btnBars");
+var barsMsg = document.getElementById("barsMsg");
+btnBars.addEventListener("click", function () {
+  var date = document.getElementById("barsDate").value.trim();
+  var code = document.getElementById("barsCode").value.trim();
+  var freq = document.getElementById("barsFreq").value;
+
+  if (!date || !code || !/^\d{8}-\d{8}$/.test(date)) { barsMsg.textContent = "日期格式 yyyyMMdd-yyyyMMdd"; return; }
+  if (!/^\d{6}$/.test(code)) { barsMsg.textContent = "代码格式 XXXXXX"; return; }
+
+  btnBars.disabled = true;
+  btnBars.textContent = "生成中...";
+  barsMsg.textContent = "";
+
+  fetch("/chart_bars?date=" + date + "&code=" + code + "&freq=" + freq, {
+    method: "GET", credentials: "same-origin"
+  })
+    .then(function (res) {
+      if (res.status === 401) { kickOut(); return null; }
+      if (!res.ok) {
+        return res.json().then(function (d) { throw new Error(d.msg || "生成失败"); });
+      }
+      return res.blob();
+    })
+    .then(function (blob) {
+      if (!blob) return;
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = code + "_" + date + "_" + freq + "_柱状图.png";
+      a.click();
+      URL.revokeObjectURL(url);
+      barsMsg.textContent = "";
+    })
+    .catch(function (err) {
+      barsMsg.textContent = err.message;
+    })
+    .finally(function () {
+      btnBars.disabled = false;
+      btnBars.textContent = "生成柱状图";
+    });
 });

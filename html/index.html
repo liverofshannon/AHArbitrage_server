@@ -37,6 +37,8 @@
       <button id="btnModeStock" class="mode-tab active">更新股票监控表</button>
       <button id="btnModePremium" class="mode-tab">更新溢价监控表</button>
       <button id="btnModeDownload" class="mode-tab">下载比价文件</button>
+      <button id="btnModeLines" class="mode-tab">AH股走势图</button>
+      <button id="btnModeBars" class="mode-tab">溢价率柱状图</button>
     </div>
 
     <p class="subtitle" id="subtitle">目标文件: <code>/home/harry/data/config/ah_stock_map.csv</code></p>
@@ -78,6 +80,72 @@
         </div>
       </div>
       <div id="downloadResults" class="download-results"></div>
+    </div>
+
+    <!-- 折线图区域 -->
+    <div id="linesSection" style="display:none">
+      <div class="chart-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="linesDate">日期范围</label>
+            <input id="linesDate" type="text" placeholder="yyyyMMdd-yyyyMMdd" maxlength="17" />
+          </div>
+          <div class="form-group">
+            <label for="linesCode">A股代码</label>
+            <input id="linesCode" type="text" placeholder="XXXXXX" maxlength="6" />
+          </div>
+          <div class="form-group">
+            <label for="linesFreq">频率</label>
+            <select id="linesFreq">
+              <option value="daily">日线</option>
+              <option value="weekly">周线</option>
+              <option value="hourly">小时线</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group checkbox-group">
+            <label>选择列（可多选）</label>
+            <div class="checkbox-list">
+              <label><input type="checkbox" class="linesCol" value="a_price" checked> A股价格</label>
+              <label><input type="checkbox" class="linesCol" value="h_price"> H股价格</label>
+              <label><input type="checkbox" class="linesCol" value="a/h_rate" checked> AH溢价率</label>
+              <label><input type="checkbox" class="linesCol" value="a_high"> A股最高</label>
+              <label><input type="checkbox" class="linesCol" value="a_low"> A股最低</label>
+              <label><input type="checkbox" class="linesCol" value="h_high"> H股最高</label>
+              <label><input type="checkbox" class="linesCol" value="h_low"> H股最低</label>
+            </div>
+          </div>
+          <button id="btnLines" class="btn btn-search">生成折线图</button>
+        </div>
+      </div>
+      <p id="linesMsg" class="download-empty"></p>
+    </div>
+
+    <!-- 柱状图区域 -->
+    <div id="barsSection" style="display:none">
+      <div class="chart-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="barsDate">日期范围</label>
+            <input id="barsDate" type="text" placeholder="yyyyMMdd-yyyyMMdd" maxlength="17" />
+          </div>
+          <div class="form-group">
+            <label for="barsCode">A股代码</label>
+            <input id="barsCode" type="text" placeholder="XXXXXX" maxlength="6" />
+          </div>
+          <div class="form-group">
+            <label for="barsFreq">频率</label>
+            <select id="barsFreq">
+              <option value="daily">日线</option>
+              <option value="weekly">周线</option>
+              <option value="hourly">小时线</option>
+            </select>
+          </div>
+          <button id="btnBars" class="btn btn-search">生成柱状图</button>
+        </div>
+      </div>
+      <p id="barsMsg" class="download-empty"></p>
     </div>
 
     <!-- 结果提示 -->
