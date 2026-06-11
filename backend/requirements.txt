@@ -2,3 +2,5 @@ flask>=3.0
 gunicorn>=22.0
 matplotlib>=3.8
 numpy>=1.26
+plotly>=5.18
+kaleido>=0.2

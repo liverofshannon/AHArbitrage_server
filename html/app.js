@@ -461,7 +461,7 @@ btnLines.addEventListener("click", function () {
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
       a.href = url;
-      a.download = code + "_" + date + "_" + freq + "_走势图.png";
+      a.download = code + "_" + date + "_" + freq + "_走势图.html";
       a.click();
       URL.revokeObjectURL(url);
       linesMsg.textContent = "";

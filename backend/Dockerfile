@@ -10,7 +10,8 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    python3 -c "import matplotlib, os, shutil; shutil.rmtree(os.path.expanduser('~/.cache/matplotlib'), ignore_errors=True)"
 COPY . .
 
 VOLUME /app/data
