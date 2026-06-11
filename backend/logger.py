@@ -57,9 +57,12 @@ class Logger:
         ch.setFormatter(fmt)
         self._logger.addHandler(ch)
 
-        fh = _NumberedRotatingHandler()
-        fh.setFormatter(fmt)
-        self._logger.addHandler(fh)
+        try:
+            fh = _NumberedRotatingHandler()
+            fh.setFormatter(fmt)
+            self._logger.addHandler(fh)
+        except OSError:
+            pass
 
     def _log(self, level, msg):
         try:
