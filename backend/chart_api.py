@@ -106,6 +106,17 @@ def _collect_data(code, start_str, end_str, columns, resample):
         if is_temp:
             temp_dirs.add(os.path.dirname(path))
         _read_file(path, columns, collectors, stock_info)
+    # 同时选了 a_price 和 h_price 时，过滤掉每天 15:00 以后的 h_price 数据
+    if "a_price" in columns and "h_price" in columns:
+        before = len(collectors["h_price"][0])
+        keep_ts, keep_val = [], []
+        for ts, val in zip(collectors["h_price"][0], collectors["h_price"][1]):
+            if ts.hour < 15:
+                keep_ts.append(ts)
+                keep_val.append(val)
+        collectors["h_price"] = (keep_ts, keep_val)
+        log.debug(f"h_price 15:00 后过滤: {before} -> {len(keep_ts)} 个数据点")
+
     log.debug(f"数据读取完成, stock_info={stock_info.get('a_cod','?')}-{stock_info.get('stock_name','?')}, "
               f"各列数据点: " + ", ".join(f"{col}={len(collectors[col][0])}" for col in columns))
 
@@ -138,9 +149,10 @@ def _build_lines_html(collectors, columns, title):
             name=label, line=dict(width=2), marker=dict(size=5),
             hovertemplate=f"{label}: %{{y:.2f}}<extra></extra>"
         ))
+    all_dates = sorted({d for col in columns for d in collectors[col][0]})
     fig.update_layout(
         title=dict(text=title, font=dict(size=16)),
-        xaxis=dict(title="时间", tickformat="%m-%d %H:%M"),
+        xaxis=dict(title="时间", tickvals=all_dates, tickformat="%m-%d %H:%M"),
         yaxis=dict(title="数值"),
         hovermode="x unified",  # 竖线 + 所有列数值
         template="plotly_white",
