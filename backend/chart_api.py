@@ -135,7 +135,7 @@ def _build_lines_html(collectors, columns, title):
         label = CsvColumn.label_of(col)
         fig.add_trace(go.Scatter(
             x=ts_list, y=val_list, mode="lines+markers",
-            name=label, line=dict(width=1), marker=dict(size=3),
+            name=label, line=dict(width=2), marker=dict(size=5),
             hovertemplate=f"{label}: %{{y:.2f}}<extra></extra>"
         ))
     fig.update_layout(
