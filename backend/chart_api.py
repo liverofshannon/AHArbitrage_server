@@ -149,10 +149,9 @@ def _build_lines_html(collectors, columns, title):
             name=label, line=dict(width=2), marker=dict(size=5),
             hovertemplate=f"{label}: %{{y:.2f}}<extra></extra>"
         ))
-    all_dates = sorted({d for col in columns for d in collectors[col][0]})
     fig.update_layout(
         title=dict(text=title, font=dict(size=16)),
-        xaxis=dict(title="时间", tickvals=all_dates, tickformat="%m-%d %H:%M"),
+        xaxis=dict(title="时间", tickformat="%m-%d %H:%M"),
         yaxis=dict(title="数值"),
         hovermode="x unified",  # 竖线 + 所有列数值
         template="plotly_white",
