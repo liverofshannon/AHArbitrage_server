@@ -269,6 +269,22 @@ body {
   color: #ff4d4f;
 }
 
+.btn-download-config {
+  padding: 10px 20px;
+  border: 1px solid #52c41a;
+  border-radius: 6px;
+  background: #fff;
+  color: #52c41a;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+
+.btn-download-config:hover {
+  background: #52c41a;
+  color: #fff;
+}
+
 .result {
   padding: 20px;
   border-radius: 8px;

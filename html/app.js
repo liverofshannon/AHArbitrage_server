@@ -156,6 +156,7 @@ var fileSize = document.getElementById("fileSize");
 var fileInput = document.getElementById("fileInput");
 var btnUpload = document.getElementById("btnUpload");
 var btnClear = document.getElementById("btnClear");
+var btnDownloadConfig = document.getElementById("btnDownloadConfig");
 var resultSuccess = document.getElementById("resultSuccess");
 var resultError = document.getElementById("resultError");
 var resultPath = document.getElementById("resultPath");
@@ -287,6 +288,34 @@ btnUpload.addEventListener("click", function () {
     .finally(function () {
       btnUpload.disabled = false;
       btnUpload.textContent = UPLOAD_MODES[uploadMode].label;
+    });
+});
+
+// 下载当前配置文件的按钮
+btnDownloadConfig.addEventListener("click", function () {
+  resultSuccess.classList.remove("show");
+  resultError.classList.remove("show");
+
+  fetch("/download_config?type=" + uploadMode, { method: "GET", credentials: "same-origin" })
+    .then(function (res) {
+      if (res.status === 401) { kickOut(); return null; }
+      if (!res.ok) {
+        return res.json().then(function (d) { throw new Error(d.msg || "下载失败"); });
+      }
+      return res.blob();
+    })
+    .then(function (blob) {
+      if (!blob) return;
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = UPLOAD_MODES[uploadMode].endpoint.includes("premium") ? "ah_alarmRate.csv" : "ah_stock_map.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    })
+    .catch(function (err) {
+      errorMsg.textContent = err.message;
+      resultError.classList.add("show");
     });
 });
 

@@ -11,10 +11,28 @@ from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, session, send_file
 
 from auth import require_auth
-from config import ROOT_DIR
+from config import ROOT_DIR, STOCK_FILE, PREMIUM_FILE
 from logger import log
 
 download_bp = Blueprint("download", __name__)
+
+CONFIG_FILES = {
+    "stock": (STOCK_FILE, "ah_stock_map.csv"),
+    "premium": (PREMIUM_FILE, "ah_alarmRate.csv"),
+}
+
+
+@download_bp.route("/download_config", methods=["GET"])
+@require_auth
+def download_config():
+    ftype = request.args.get("type", "").strip()
+    if ftype not in CONFIG_FILES:
+        return jsonify({"code": 400, "msg": "type 仅支持 stock 或 premium"}), 400
+    filepath, filename = CONFIG_FILES[ftype]
+    if not os.path.isfile(filepath):
+        return jsonify({"code": 404, "msg": f"文件不存在: {filename}"}), 404
+    log.info(f"下载配置文件: {filepath} ({os.path.getsize(filepath)}B)")
+    return send_file(filepath, as_attachment=True, download_name=filename)
 
 
 def _find_files(code, start_date, end_date):
