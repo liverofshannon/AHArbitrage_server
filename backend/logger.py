@@ -62,7 +62,10 @@ class Logger:
         self._logger.addHandler(fh)
 
     def _log(self, level, msg):
-        user = flask_session.get("username", "-")
+        try:
+            user = flask_session.get("username", "-")
+        except RuntimeError:
+            user = "-"
         getattr(self._logger, level)(f"[{user}] {msg}")
 
     def debug(self, msg):   self._log("debug", msg)
